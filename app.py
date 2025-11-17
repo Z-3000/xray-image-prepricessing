@@ -278,7 +278,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 
 # 2. 메인 제목 및 부제
-st.title("🔬 X-ray DICOM / Image Preprocessing Viewer")
+st.title("X-ray DICOM / Image Preprocessing Viewer")
 st.markdown("""
 OpenCV 기반으로 전처리 알고리즘의 효과를 비교 사전에 확인하고,  
 DICOM Window Level 및 일반 PNG/JPEG 이미지에 대해 시각화를 지원합니다.
