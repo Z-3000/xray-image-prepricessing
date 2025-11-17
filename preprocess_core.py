@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 from PIL import Image
 from io import BytesIO
-from typing import Tuple, Literal
+from typing import Tuple, Literal, Optional
 
 # 타입 힌트를 위한 정의
 NormalizationMode = Literal["minmax", "window"]
@@ -26,6 +26,16 @@ def apply_window_level(img_array: np.ndarray, window_center: float, window_width
     windowed_img = (windowed_img - min_val) / window_width * 255.0
     
     return windowed_img.astype(np.uint8)
+
+def load_image(file_bytes: bytes) -> Image.Image:
+    """
+    일반 이미지 파일(PNG, JPG, BMP 등)을 RGB PIL 이미지로 로드
+    """
+    try:
+        img = Image.open(BytesIO(file_bytes)).convert("RGB")
+        return img
+    except Exception as e:
+        raise ValueError(f"이미지 파일 처리 실패: {e}")
 
 def dicom_to_pil(file_bytes: bytes, normalize_mode: NormalizationMode = "minmax") -> Tuple[Image.Image, pydicom.Dataset]:
     """업로드된 DICOM 바이트 → 표준화된 PIL 이미지(RGB, 0-255) 및 DICOM 데이터셋으로 변환"""
@@ -93,7 +103,7 @@ def apply_clahe(pil_img: Image.Image, clip_limit: float = 2.0, tile_grid_size: i
     cl_rgb = cv2.cvtColor(cl, cv2.COLOR_GRAY2RGB)
     return Image.fromarray(cl_rgb)
 
-def apply_edge(pil_img: Image.Image, method: str = "canny", threshold1: int = 50, threshold2: int = 150) -> Image.Image:
+def apply_edge(pil_img: Image.Image, threshold1: int = 50, threshold2: int = 150, method: str = "canny") -> Image.Image:
     """
     에지 검출 (Canny) 적용
     """

@@ -2,7 +2,7 @@
 import streamlit as st
 from io import BytesIO
 # preprocess_core.py 파일이 같은 폴더에 있어야 합니다.
-from preprocess_core import dicom_to_pil, apply_clahe, apply_edge
+from preprocess_core import dicom_to_pil, load_image, apply_clahe, apply_edge
 from PIL import Image
 
 # 1. 페이지 기본 설정
@@ -269,39 +269,13 @@ hr {
 }
 .stSidebar .stFileUploader > div {
     border: 1px solid #D0D8E0 !important;
-    border-radius: 10px !important;
-    padding: 12px !important;
-}
-.stSidebar .stFileUploader button {
-    background-color: #FFFFFF !important;
-    color: #003366 !important;
-    border: 1px solid #99BBDD !important;
     border-radius: 8px !important;
-}
-/* 🔼 업로더 오버라이드 끝 🔼 */
-
-/* 탭 컨테이너 */
-.stTabs [data-baseweb="tab-list"] {
-    border: 2px solid #D0E0F0 !important;
-    border-radius: 8px !important;
-    padding: 4px !important;
-    background-color: #F8F9FA !important;
-}
-
-/* 활성/비활성 탭 */
-.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-    color: #0066CC !important;
-    font-weight: 700 !important;
-}
-.stTabs [data-baseweb="tab-list"] button[aria-selected="false"] {
-    color: #999999 !important;
-    font-weight: 400 !important;
 }
 
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
-st.markdown(custom_css, unsafe_allow_html=True)
+
 
 # 2. 메인 제목 및 부제
 st.title("🔬 X-ray DICOM / Image Preprocessing Viewer")
@@ -392,7 +366,7 @@ else:
     @st.cache_data
     def load_standard_image(file_bytes: bytes, name: str, size: int):
         """PNG/JPEG/BMP 등 일반 이미지 로딩"""
-        img = Image.open(BytesIO(file_bytes)).convert("RGB")
+        img = load_image(file_bytes)
         meta = {
             "파일명 (File Name)": name,
             "형식 (Format)": img.format if img.format is not None else "N/A",
@@ -431,7 +405,7 @@ else:
         if mode == "Local Contrast(CLAHE)":
             return apply_clahe(img, params.get('clip_limit', 2.0), params.get('tile_grid_size', 8))
         elif mode == "Edge Detection (Canny)":
-            return apply_edge(img, params.get('threshold1', 50), params.get('threshold2', 150))
+            return apply_edge(img, threshold1=params.get('threshold1', 50), threshold2=params.get('threshold2', 150))
         return img
 
     processed_img = apply_preprocess(
