@@ -120,13 +120,46 @@ hr {
 .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
     color: #0066CC !important;
     font-weight: 700 !important;
-    
+    border-bottom: none !important;  /* 이 줄 추가 또는 수정 */
 }
 
 /* 비활성 탭 스타일 */
 .stTabs [data-baseweb="tab-list"] button[aria-selected="false"] {
     color: #999999 !important;
     font-weight: 400 !important;
+    border-bottom: none !important;  /* 이 줄 추가 */
+}
+
+/* 모든 탭 버튼의 border 제거 */
+.stTabs [data-baseweb="tab-list"] button {
+    border: none !important;
+    border-bottom: none !important;
+}
+
+/* 활성 탭 */
+.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+    color: #0066CC !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+/* 비활성 탭 */
+.stTabs [data-baseweb="tab-list"] button[aria-selected="false"] {
+    color: #999999 !important;
+    font-weight: 400 !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+/* 탭 컨테이너 하단 경계선 제거 */
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+/* 탭 전체 하단 선 제거 */
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none !important;
 }
 
 </style>
@@ -219,12 +252,14 @@ section[data-testid="stSidebar"] .stFileUploader {
 section[data-testid="stSidebar"] .stFileUploader * {
     color: #003366 !important;
 }
+
 /* 활성 탭 스타일 */
 .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
     color: #0066CC !important;
     font-weight: 700 !important;
-    border-bottom: 3px solid #004A99 !important;
+    border-bottom: none !important;  /* 3px solid 부분을 none으로 변경 */
 }
+
 section[data-testid="stSidebar"] .stFileUploader button {
     background-color: #FFFFFF !important;
     color: #003366 !important;
@@ -278,10 +313,12 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 
 # 2. 메인 제목 및 부제
-st.title("X-ray DICOM / Image Preprocessing Viewer")
+st.title("폐렴 진단용 의료 영상 전처리 시각화 도구")
 st.markdown("""
-OpenCV 기반으로 전처리 알고리즘의 효과를 비교 사전에 확인하고,  
-DICOM Window Level 및 일반 PNG/JPEG 이미지에 대해 시각화를 지원합니다.
+DICOM 및 일반 의료영상 이미지 파일에 대해 전처리 알고리즘(CLAHE, Canny Edge)을 실시간으로 시각화합니다.
+
+- **DICOM**: 의료 영상 표준 포맷으로, 픽셀 데이터와 함께 환자 정보 등의 메타데이터를 포함합니다.
+- **지원 파일 형식**: .dcm (DICOM), .png, .jpg, .jpeg, .bmp
 """)
 st.markdown("---")
 
@@ -289,7 +326,7 @@ st.markdown("---")
 # *****************************************************************
 # 3. 사이드바: 파일 업로드 & 전처리 설정
 # *****************************************************************
-st.sidebar.header("의료 영상 파일 업로드 (DICOM / PNG / JPEG)")
+st.sidebar.header("영상 파일 업로드")
 
 uploaded_file = st.sidebar.file_uploader(
     "의료 영상 파일 선택",
@@ -298,9 +335,9 @@ uploaded_file = st.sidebar.file_uploader(
 
 # DICOM 정규화/시각화 모드 선택 (DICOM에만 의미)
 st.sidebar.markdown("---")
-st.sidebar.subheader("DICOM 시각화 모드 (DICOM 파일일 때만 적용)")
+st.sidebar.subheader("이미지 로딩 및 전처리 모드")
 normalize_mode = st.sidebar.radio(
-    "원본 이미지 로딩 방식",
+    "이미지 로딩 방식",
     [
         "minmax",  # Min/Max Normalization (일반 보기)
         "window"   # DICOM Window Level (의료 표준)
@@ -346,7 +383,17 @@ else:
 # 4. 메인 콘텐츠: 이미지 로딩 & 전처리
 # *****************************************************************
 if uploaded_file is None:
-    st.info("좌측 패널에서 DICOM 또는 PNG/JPEG 파일을 업로드하고 전처리 옵션을 선택하세요.")
+    st.info("""
+    좌측 패널에서 이미지 파일을 업로드하고 전처리 옵션을 선택하세요
+      
+    **이미지 로딩**
+    - **Min/Max Normalization**: 전체 이미지의 최소/최대 픽셀값을 0-255로 정규화
+    - **DICOM Window Level**: 특정 조직을 강조하는 의료 영상 표준 방식, DICOM 이미지의 메타데이터에서 설정값을 가져옵니다.
+
+    **전처리 모드**
+    - **Local Contrast (CLAHE)**: 타일 단위로 국소 대비를 향상시켜 저대비 영역의 세부사항 개선
+    - **Edge Detection (Canny)**: 해부학적 구조의 경계선을 추출하여 윤곽 분석
+                """)
 else:
     file_name = uploaded_file.name
     lower_name = file_name.lower()
@@ -419,7 +466,7 @@ else:
     )
 
     # 4.3. 탭 구성
-    tab1, tab2 = st.tabs(["Before / After 비교", "알고리즘 설명 및 메타데이터"])
+    tab1, tab2 = st.tabs(["Before / After 비교", "이미지정보"])
 
     # -----------------
     # TAB 1: Before / After
@@ -437,48 +484,20 @@ else:
             caption_text = "일반 이미지 (PNG/JPEG/BMP)"
 
         with col1:
-            st.subheader("원본 이미지 (Original)")
+            st.subheader("Before: 원본 이미지")
             st.image(original_img, caption=f"로딩 방식: {caption_text}", use_container_width=True)
 
         with col2:
-            st.subheader(f"전처리 결과: {mode}")
+            st.subheader(f"After: {mode}")
             st.image(processed_img, caption=f"적용 파라미터: {params}", use_container_width=True)
 
     # -----------------
     # TAB 2: 설명 & 메타데이터
     # -----------------
     with tab2:
-        st.header("알고리즘 및 프로젝트 노트")
-        st.markdown("---")
-
-        # 전처리 모드 설명
-        if mode == "Local Contrast(CLAHE)":
-            st.markdown("""
-                ### CLAHE (Contrast Limited Adaptive Histogram Equalization)
-                - **목표:** 의료 영상(특히 X-ray)의 국소 대비(contrast)를 향상시켜 병변이나 구조를 더 잘 보이게 함
-                - **작동 원리:** 이미지 전체가 아닌 작은 타일(Tile) 단위로 히스토그램 평활화 수행  
-                  `Clip Limit`로 대비 증폭을 제한해 과도한 노이즈 발생을 방지
-                - **활용:** 낮은 대비의 의료 영상에서 딥러닝/머신러닝 입력 품질을 개선하는 전처리로 사용 가능
-            """)
-        elif mode == "Edge Detection (Canny)":
-            st.markdown("""
-                ### Canny Edge Detection
-                - **목표:** 해부학적 구조나 병변의 경계를 선명하게 추출
-                - **작동 원리:** 가우시안 블러로 노이즈 제거 → 그래디언트 계산 →  
-                  두 개의 임계값(Threshold 1, 2)으로 약한/강한 에지를 분류해 최종 에지 결정
-                - **활용:** 윤곽 기반 특징추출, 세그멘테이션, 규칙기반 분석(Rule-based) 등에 활용 가능
-            """)
-        else:
-            st.markdown("""
-                원본 영상 로딩 및 기본 메타데이터 확인용 모드입니다.  
-                좌측 사이드바에서 다른 전처리 모드를 선택하여 효과를 비교할 수 있습니다.
-            """)
-
-        st.markdown("---")
 
         # 메타데이터 영역
         if is_dicom and dcm_data is not None:
-            st.subheader("DICOM 메타데이터 (주요 Tag)")
 
             wc_value = dcm_data.get('WindowCenter', 'N/A')
             ww_value = dcm_data.get('WindowWidth', 'N/A')
@@ -490,22 +509,37 @@ else:
 
             meta_data = {
                 "환자 ID (Patient ID)": str(dcm_data.get('PatientID', 'N/A')),
-                "검사 종류 (Modality)": str(dcm_data.get('Modality', 'N/A')),
-                "연구 설명 (Study Desc)": str(dcm_data.get('StudyDescription', 'N/A')),
-                "획득 날짜 (Acquisition Date)": str(dcm_data.get('AcquisitionDate', 'N/A')),
                 "이미지 크기 (Rows/Cols)": f"{dcm_data.get('Rows', 'N/A')} x {dcm_data.get('Columns', 'N/A')}",
                 "비트 수 (Bits Stored)": str(dcm_data.get('BitsStored', 'N/A')),
                 "Window Center": str(wc_value),
                 "Window Width": str(ww_value),
-                "Rescale Slope/Intercept": f"{dcm_data.get('RescaleSlope', '1.0')} / {dcm_data.get('RescaleIntercept', '0.0')}",
             }
 
-            st.dataframe(
-                list(meta_data.items()),
-                column_config={0: "Tag", 1: "Value"},
-                hide_index=True,
-                use_container_width=True
-            )
+            # 데이터를 HTML 테이블로 변환
+            table_html = """
+            <style>
+            .meta-table {
+                width: 100%;
+                border-collapse: collapse;
+                background-color: white;
+            }
+            .meta-table td {
+                padding: 12px;
+                border: 1px solid #B3D9FF;
+                color: #333333;
+            }
+            .meta-table td:first-child {
+                font-weight: 600;
+                background-color: #F0F8FF;
+            }
+            </style>
+            <table class="meta-table">
+            """
+            for key, value in meta_data.items():
+                table_html += f"<tr><td>{key}</td><td>{value}</td></tr>"
+            table_html += "</table>"
+
+            st.markdown(table_html, unsafe_allow_html=True)
 
             if normalize_mode == 'window':
                 st.info(
@@ -516,35 +550,36 @@ else:
             else:
                 st.info(
                     "현재 이미지는 Min/Max Normalization을 적용하여 픽셀을 0-255 범위로 스케일링했습니다. "
-                    "DICOM Window Level (의료 표준) 모드와 비교하여 차이를 확인할 수 있습니다."
+                    
                 )
-
-            with st.expander("전체 DICOM 정보 보기"):
-                try:
-                    st.json(dcm_data.to_json_dict())
-                except Exception:
-                    st.text(str(dcm_data))
-
         else:
             # 일반 PNG/JPEG/BMP 이미지 메타데이터
-            st.subheader("이미지 메타데이터 (일반 이미지)")
             if basic_meta is not None:
-                st.dataframe(
-                    list(basic_meta.items()),
-                    column_config={0: "항목", 1: "값"},
-                    hide_index=True,
-                    use_container_width=True
-                )
-                st.info("일반 이미지의 경우 DICOM Tag 대신 파일/해상도 기반 기본 정보를 제공합니다.")
+                # HTML 테이블로 변환
+                table_html = """
+                <style>
+                .meta-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    background-color: white;
+                }
+                .meta-table td {
+                    padding: 12px;
+                    border: 1px solid #B3D9FF;
+                    color: #333333;
+                }
+                .meta-table td:first-child {
+                    font-weight: 600;
+                    background-color: #F0F8FF;
+                }
+                </style>
+                <table class="meta-table">
+                """
+                for key, value in basic_meta.items():
+                    table_html += f"<tr><td>{key}</td><td>{value}</td></tr>"
+                table_html += "</table>"
+                
+                st.markdown(table_html, unsafe_allow_html=True)
+                st.info("일반 이미지의 경우 DICOM 메타데이터 대신 파일/해상도 기반 기본 정보를 제공합니다.")
             else:
                 st.write("메타데이터를 불러올 수 없습니다.")
-
-        with st.expander("프로젝트 구조 및 유지보수 메모"):
-            st.markdown("""
-                이 애플리케이션은 다음과 같이 모듈을 분리했습니다.
-                - **app.py**: Streamlit UI 및 입출력/레이아웃
-                - **preprocess_core.py**: DICOM 윈도우링, CLAHE, Canny 등 전처리 핵심 로직
-
-                전처리 알고리즘을 바꾸거나 추가하고 싶다면 `preprocess_core.py`에 새로운 함수를 추가한 뒤  
-                `app.py`의 `apply_preprocess()`에 분기 로직을 추가하는 방식으로 확장할 수 있습니다.
-            """)
