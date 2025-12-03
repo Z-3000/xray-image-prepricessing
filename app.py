@@ -39,9 +39,28 @@ header * {
 
 /* ------ 사이드바 스타일 영역 ------ */
 
+/* 사이드바 접기 버튼 항상 표시 */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+button[kind="headerNoPadding"],
+.stSidebar button[kind="header"],
+section[data-testid="stSidebar"] > div:first-child button,
+[data-testid="stSidebarNav"] button,
+div[data-testid="stSidebarCollapsedControl"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+/* 사이드바 영역 호버 시에만 보이는 버튼 강제 표시 */
+section[data-testid="stSidebar"]::before,
+[data-testid="stSidebarUserContent"]::before {
+    opacity: 1 !important;
+}
+
 /* 사이드바 배경 */
 .stSidebar {
-    background-color: #E4F0FF !important; 
+    background-color: #E4F0FF !important;
     border-right: 1px solid #99C2FF !important;
 }
 
